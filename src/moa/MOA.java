@@ -2,7 +2,7 @@ package moa;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import moa.Utils;
+import java.util.HashMap;
 
 /**
  *
@@ -14,35 +14,19 @@ class Estado {
     protected int custo = 0;
     protected int[] elementos;
     protected int hS;
-    protected ArrayList<Estado> filhos;
+    protected int fn;
     Estado pai = null;
 
-    public int gethS() {
-        return hS;
-    }
-
-    public void sethS(int hS) {
-        this.hS = hS;
+    Estado(int[] elementos, Estado pai) {
+        custoFilho++;
+        this.elementos = elementos;
+        this.pai = pai;
     }
 
     Estado(int[] elementos) {
         this.elementos = elementos;
-        this.filhos = new ArrayList<>();
     }
 
-    void setNewFilho(Estado filho) {
-        this.custo += 1;
-        filho.setCusto(this.custo);
-        this.filhos.add(filho);
-    }
-
-    void setPai(Estado pai) {
-        this.pai = pai;
-    }
-
-    ArrayList<Estado> getFilhos() {
-        return this.filhos;
-    }
 
     int[] getElementos() {
         return this.elementos;
@@ -75,7 +59,7 @@ public class MOA {
         return matrizInicial;
     }
 
-    public int caclularPrimeiraHeuristicaMatriz(int[] configInicial, int[] configFim) {
+    public int caclularSegundaHeuristicaMatriz(int[] configInicial, int[] configFim) {
         int[][] matrizInicial = this.criarMatriz(configInicial);
         int[][] matrizFinal = this.criarMatriz(configFim);
 
@@ -148,73 +132,127 @@ public class MOA {
      *
      * @param confInicial
      */
-    private Estado getPossibilidadesPermuta(Estado estado) {
+    private ArrayList<Estado> getPossibilidadesPermuta(Estado estado) {
         int posTroca;
         int[] confInicial = estado.getElementos();
-
         int zeroPosition = this.getZeroPosition(confInicial);
         int maxPositionMatriz = confInicial.length;
 
+        ArrayList<Estado> lstFilhos = new ArrayList<Estado>();
         ArrayList<Integer> lastColRight = new ArrayList<Integer>();
         lastColRight.addAll(Arrays.asList(3, 7, 11));
 
         //Pega o Elemento a direita
         posTroca = zeroPosition + 1;
         if (posTroca % 4 != 0) {
-            estado.setNewFilho(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial)));
+            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado));
         }
 
         //Pega o Elemento a esquerda
         posTroca = zeroPosition - 1;
         if ((lastColRight.indexOf(posTroca) == -1)
                 && (zeroPosition - 1 > 0)) {
-            estado.setNewFilho(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial)));
+            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado));
         }
 
         //Pega o Elemento a cima
         posTroca = zeroPosition - 4;
         if (posTroca > 0) {
-            estado.setNewFilho(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial)));
+            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado));
         }
 
         //Pega o Elemento a baixo
         posTroca = zeroPosition + 4;
         if (posTroca < maxPositionMatriz) {
-            estado.setNewFilho(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial)));
+            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado));
         }
-        return estado;
+        return lstFilhos;
+    }
+
+    // pega o estado de menor fn
+    public Estado getMinValue(ArrayList<Estado> array) {
+        Estado minValue = array.get(0);
+        for (int i = 1; i < array.size(); i++) {
+            if (array.get(i).fn < minValue.fn) {
+                minValue = array.get(i);
+            }
+        }
+        return minValue;
+    }
+
+    public boolean isEqualFinal(int[] m, int[] configFinal) {
+        HashMap<String, int[]> comparator = new HashMap<>();
+        String stringM = Arrays.toString(m);
+        comparator.put(Arrays.toString(m), m);
+        comparator.put(Arrays.toString(configFinal), m);
+        if (comparator.get(stringM) != null) {
+            return true;
+        }
+        return false;
     }
 
     public void algoritmoAEstrela() {
-        ArrayList cnjtA = new ArrayList<>();
+        ArrayList<Estado> cnjtA = new ArrayList<Estado>();
         ArrayList cnjtF = new ArrayList<>();
-        ArrayList cnjtS = new ArrayList<>();
+        //ArrayList cnjtS = new ArrayList<>();
         ArrayList cnjtT = new ArrayList<>();
         ArrayList cnjtP = new ArrayList<>();
+        ArrayList cnjtSuss = new ArrayList<>();
 
         int[] confFinal = {1, 12, 11, 10, 2, 13, 0, 9, 3, 14, 15, 8, 4, 5, 6, 7};
         int[] confInicial = {1, 2, 3, 4, 5, 13, 7, 8, 9, 10, 11, 12, 6, 14, 15, 0};
 
         Estado estadoInicial = new Estado(confInicial);
-        estadoInicial = this.getPossibilidadesPermuta(estadoInicial);
-        cnjtS.add(estadoInicial);
+        estadoInicial.hS = caclularSegundaHeuristicaMatriz(estadoInicial.getElementos(), confInicial);
+        estadoInicial.fn = estadoInicial.getCusto() + estadoInicial.hS;
+        //estadoInicial = this.getPossibilidadesPermuta(estadoInicial);
+        cnjtA.add(estadoInicial);
+        Estado m = getMinValue(cnjtA);
+        while (m != null && !isEqualFinal(m, confFinal)) {
 
-        ArrayList<Integer> vetResults = new ArrayList<>();
-        for (Estado filho : estadoInicial.getFilhos()) {
-            vetResults.add(this.caclularPrimeiraHeuristicaMatriz(filho.getElementos(), confFinal));
+            cnjtSuss = this.getPossibilidadesPermuta(m);
+            for (Estado filho : cnjtSuss) {
+                if (filho == cnjA.elem && filho.custo < cnjA.elem) {
+                    removo filho de A
+                }
+                if (filho 
+                    
+                    
+                    
+                    
+                    
+                    notIn(conjA) && filho notIn(conjF)
+                
+                
+                
+                
+                
+                
+                    ){
+                    add M em abertos
+                }
+            }
+            // atualiza m
+
         }
 
     }
 
-    public static void main(String[] args) {
+}
+
+public static void main(String[] args) {
 
         MOA moa = new MOA();
         moa.algoritmoAEstrela();
 
+    }
+
+    private boolean isEqualFinal(Estado m) {
+        return false;
     }
 
 }
