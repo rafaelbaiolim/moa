@@ -30,9 +30,9 @@ public class MOA {
     /**
      * @param args the command line arguments
      */
-    public int[][] criarMatriz(int entrada) {
+    public int[][] criarMatriz(String entrada) {
         int matrizInicial[][] = new int[4][4];
-        
+        String[] entradaSplit = entrada.split(" ");
         int total = 0;
         for (int i = 0; i < matrizInicial.length; i++) {
             for (int j = 0; j < matrizInicial[0].length; j++) {
@@ -43,8 +43,6 @@ public class MOA {
     }
 
     public int caclularPrimeiraHeuristicaMatriz(int[] configInicial, int[] configFim) {
-        matrizInicial = this.criarMatriz(configInicial);
-        matrizFinal = this.criarMatriz(configFim);
         
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4.length; j++) {
