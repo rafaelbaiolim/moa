@@ -6,14 +6,24 @@ import moa.Utils;
 
 /**
  *
- * @author guest-GOTfqn
+ * @author Rafael Altar
  */
 class Estado {
 
     static int custoFilho = 0;
     protected int custo = 0;
     protected int[] elementos;
+    protected int hS;
     protected ArrayList<Estado> filhos;
+    Estado pai = null;
+
+    public int gethS() {
+        return hS;
+    }
+
+    public void sethS(int hS) {
+        this.hS = hS;
+    }
 
     Estado(int[] elementos) {
         this.elementos = elementos;
@@ -24,6 +34,10 @@ class Estado {
         this.custo += 1;
         filho.setCusto(this.custo);
         this.filhos.add(filho);
+    }
+
+    void setPai(Estado pai) {
+        this.pai = pai;
     }
 
     ArrayList<Estado> getFilhos() {
@@ -110,10 +124,6 @@ public class MOA {
 
     }
 
-    public void algoritmoAEstrela() {
-
-    }
-
     protected int getZeroPosition(int[] conf) {
         int i = 0;
         for (i = 0; i < conf.length; i++) {
@@ -179,32 +189,32 @@ public class MOA {
         return estado;
     }
 
-    public static void main(String[] args) {
-
-        MOA aEstrela = new MOA();
+    public void algoritmoAEstrela() {
+        ArrayList cnjtA = new ArrayList<>();
+        ArrayList cnjtF = new ArrayList<>();
+        ArrayList cnjtS = new ArrayList<>();
+        ArrayList cnjtT = new ArrayList<>();
+        ArrayList cnjtP = new ArrayList<>();
 
         int[] confFinal = {1, 12, 11, 10, 2, 13, 0, 9, 3, 14, 15, 8, 4, 5, 6, 7};
         int[] confInicial = {1, 2, 3, 4, 5, 13, 7, 8, 9, 10, 11, 12, 6, 14, 15, 0};
-        //String entrada = "2 3 4 5 13 14 8 9 10 11 12 1 15 0 7 6";
-        //int[][] matriz = aEstrela.criarMatriz(entrada);
 
         Estado estadoInicial = new Estado(confInicial);
-
-        estadoInicial = aEstrela.getPossibilidadesPermuta(estadoInicial);
+        estadoInicial = this.getPossibilidadesPermuta(estadoInicial);
+        cnjtS.add(estadoInicial);
 
         ArrayList<Integer> vetResults = new ArrayList<>();
         for (Estado filho : estadoInicial.getFilhos()) {
-            vetResults.add(aEstrela.caclularPrimeiraHeuristicaMatriz(filho.getElementos(), confFinal));
+            vetResults.add(this.caclularPrimeiraHeuristicaMatriz(filho.getElementos(), confFinal));
         }
-        for (int x : vetResults) {
-            System.out.println(x);
-        }
-        //System.out.println(a_estrela.calcularPrimeiraHeuristica(conf_inicial, conf_final));
-        //System.out.println(a_estrela.calcularSegundaHeuristica(conf_inicial));
-        /*Scanner input = new Scanner(System.in);
-        System.out.println("Digite sua string de entrada: ");
-        String entrada = input.nextLine();
-        System.out.println("\n" + entrada);*/
+
+    }
+
+    public static void main(String[] args) {
+
+        MOA moa = new MOA();
+        moa.algoritmoAEstrela();
+
     }
 
 }
