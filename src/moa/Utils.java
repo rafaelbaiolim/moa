@@ -14,6 +14,18 @@ import java.util.Arrays;
  */
 public class Utils {
 
+    public static int[][] criarMatriz(int[] entrada) {
+        int matrizInicial[][] = new int[4][4];
+
+        int total = 0;
+        for (int i = 0; i < matrizInicial.length; i++) {
+            for (int j = 0; j < matrizInicial[0].length; j++) {
+                matrizInicial[i][j] = entrada[total++];
+            }
+        }
+        return matrizInicial;
+    }
+
     public static void printArrayList(ArrayList<int[]> lst) {
         for (int[] vet : lst) {
             System.out.println(Arrays.toString(vet));
@@ -21,13 +33,16 @@ public class Utils {
     }
 
     public static void printArray(int[] arr) {
-        System.out.println(Arrays.toString(arr));
+        int[][] m = criarMatriz(arr);
+        printMatriz(m);
+        //System.out.println(Arrays.toString(arr));
     }
 
     public static void printMatriz(int matrix[][]) {
         for (int[] row : matrix) {
             System.out.println(Arrays.toString(row));
         }
+        System.out.println("\n");
     }
 
 }

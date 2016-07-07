@@ -3,6 +3,8 @@ package moa;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map.Entry;
+import static jdk.nashorn.internal.objects.NativeArray.map;
 
 /**
  *
@@ -11,14 +13,14 @@ import java.util.HashMap;
 class Estado {
 
     static int custoFilho = 0;
-    protected int custo = 0;
-    protected int[] elementos;
-    protected int hS;
-    protected int fn;
+    public int custo = 0;
+    public int[] elementos;
+    public int hS;
+    public int fn;
     Estado pai = null;
 
-    Estado(int[] elementos, Estado pai) {
-        custoFilho++;
+    Estado(int[] elementos, Estado pai, int custo) {
+        this.custo = custo;
         this.elementos = elementos;
         this.pai = pai;
     }
@@ -27,6 +29,9 @@ class Estado {
         this.elementos = elementos;
     }
 
+    Estado() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     int[] getElementos() {
         return this.elementos;
@@ -59,7 +64,7 @@ public class MOA {
         return matrizInicial;
     }
 
-    public int caclularSegundaHeuristicaMatriz(int[] configInicial, int[] configFim) {
+    public int calcularSegundaHeuristicaMatriz(int[] configInicial, int[] configFim) {
         int[][] matrizInicial = this.criarMatriz(configInicial);
         int[][] matrizFinal = this.criarMatriz(configFim);
 
@@ -104,10 +109,6 @@ public class MOA {
         return peças_fora_sequencia;
     }
 
-    protected void getPossibilidadesPermuta(int[][] matriz) {
-
-    }
-
     protected int getZeroPosition(int[] conf) {
         int i = 0;
         for (i = 0; i < conf.length; i++) {
@@ -145,50 +146,66 @@ public class MOA {
         //Pega o Elemento a direita
         posTroca = zeroPosition + 1;
         if (posTroca % 4 != 0) {
-            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial), estado));
+
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado, estado.custo + 1);
+            lstFilhos.add(est);
+
         }
 
         //Pega o Elemento a esquerda
         posTroca = zeroPosition - 1;
         if ((lastColRight.indexOf(posTroca) == -1)
                 && (zeroPosition - 1 > 0)) {
-            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial), estado));
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado, estado.custo + 1);
+            lstFilhos.add(est);
+
         }
 
         //Pega o Elemento a cima
         posTroca = zeroPosition - 4;
         if (posTroca > 0) {
-            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial), estado));
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado, estado.custo + 1);
+            lstFilhos.add(est);
+
         }
 
         //Pega o Elemento a baixo
         posTroca = zeroPosition + 4;
         if (posTroca < maxPositionMatriz) {
-            lstFilhos.add(new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, confInicial), estado));
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, confInicial), estado, estado.custo + 1);
+            lstFilhos.add(est);
         }
         return lstFilhos;
     }
 
     // pega o estado de menor fn
-    public Estado getMinValue(ArrayList<Estado> array) {
-        Estado minValue = array.get(0);
-        for (int i = 1; i < array.size(); i++) {
+    public Estado getMinValue(HashMap<int[], Estado> array) {
+        Estado est = new Estado();
+        Entry<int[], Estado> min = null;
+        for (Entry<int[], Estado> entry : array.entrySet()) {
+            if (min == null || min.getValue().fn > entry.getValue().fn) {
+                min = entry;
+            }
+        }
+
+        /*for (int i = 1; i < array.size(); i++) {
             if (array.get(i).fn < minValue.fn) {
                 minValue = array.get(i);
             }
         }
-        return minValue;
+        return minValue; */
+        return min.getValue();
     }
 
-    public boolean isEqualFinal(int[] m, int[] configFinal) {
+    public boolean isStateEqual(int[] m, int[] configFinal) {
         HashMap<String, int[]> comparator = new HashMap<>();
         String stringM = Arrays.toString(m);
-        comparator.put(Arrays.toString(m), m);
-        comparator.put(Arrays.toString(configFinal), m);
+        comparator.put(Arrays.toString(configFinal), configFinal);
+
         if (comparator.get(stringM) != null) {
             return true;
         }
@@ -196,63 +213,64 @@ public class MOA {
     }
 
     public void algoritmoAEstrela() {
-        ArrayList<Estado> cnjtA = new ArrayList<Estado>();
-        ArrayList cnjtF = new ArrayList<>();
-        //ArrayList cnjtS = new ArrayList<>();
-        ArrayList cnjtT = new ArrayList<>();
-        ArrayList cnjtP = new ArrayList<>();
-        ArrayList cnjtSuss = new ArrayList<>();
+        HashMap<int[], Estado> cnjtA = new HashMap<>();
+        HashMap<int[], Estado> cnjtF = new HashMap<>();
+        //HashMap cnjtS = new HashMap<>();
+        HashMap<int[], Estado> cnjtT = new HashMap<>();
+        HashMap<int[], Estado> cnjtP = new HashMap<>();
+        ArrayList<Estado> cnjtSuss = new ArrayList<>();
 
         int[] confFinal = {1, 12, 11, 10, 2, 13, 0, 9, 3, 14, 15, 8, 4, 5, 6, 7};
-        int[] confInicial = {1, 2, 3, 4, 5, 13, 7, 8, 9, 10, 11, 12, 6, 14, 15, 0};
+
+        int[] confInicial = {1, 12, 11, 10, 0, 13, 15, 9, 2, 14, 6, 8, 3, 4, 5, 7};
 
         Estado estadoInicial = new Estado(confInicial);
-        estadoInicial.hS = caclularSegundaHeuristicaMatriz(estadoInicial.getElementos(), confInicial);
+        //Segunda , mas é a primeira
+        estadoInicial.hS = calcularSegundaHeuristicaMatriz(estadoInicial.getElementos(), confFinal);
         estadoInicial.fn = estadoInicial.getCusto() + estadoInicial.hS;
-        //estadoInicial = this.getPossibilidadesPermuta(estadoInicial);
-        cnjtA.add(estadoInicial);
-        Estado m = getMinValue(cnjtA);
-        while (m != null && !isEqualFinal(m, confFinal)) {
 
+        //estadoInicial = this.getPossibilidadesPermuta(estadoInicial);
+        cnjtA.put(confInicial, estadoInicial);
+        Estado m = estadoInicial;
+        int breaker = 0;
+        while (m != null && !isStateEqual(m.getElementos(), confFinal)) {
+
+            if (isStateEqual(m.getElementos(), confFinal)) {
+                break;
+            }
+
+            Estado est = cnjtA.get(m.getElementos());
+            cnjtA.remove(est.getElementos());
+            cnjtF.put(est.getElementos(), est);
             cnjtSuss = this.getPossibilidadesPermuta(m);
+
             for (Estado filho : cnjtSuss) {
-                if (filho == cnjA.elem && filho.custo < cnjA.elem) {
-                    removo filho de A
+                for (int i = 0; i < cnjtA.size(); i++) {
+                    if (isStateEqual(filho.getElementos(), cnjtA.get(i).getElementos()) && filho.custo < cnjtA.get(i).custo) {
+                        cnjtA.remove(cnjtA.get(i));
+                    }
                 }
-                if (filho 
-                    
-                    
-                    
-                    
-                    
-                    notIn(conjA) && filho notIn(conjF)
-                
-                
-                
-                
-                
-                
-                    ){
-                    add M em abertos
+
+                if ((cnjtF.get(filho.getElementos()) == null) && (cnjtF.get(filho.getElementos()) == null)) {
+                    filho.hS = calcularSegundaHeuristicaMatriz(filho.getElementos(), confFinal);
+                    //System.out.println(filho.custo);
+                    filho.fn = filho.custo + filho.hS;
+
+                    cnjtA.put(filho.getElementos(), filho);
                 }
             }
-            // atualiza m
+            m = getMinValue(cnjtA);
+            breaker++;
+            Utils.printArray(m.getElementos());
+            if (breaker == 2) {
+                return;
 
+            }
         }
-
     }
 
-}
-
-public static void main(String[] args) {
-
+    public static void main(String[] args) {
         MOA moa = new MOA();
         moa.algoritmoAEstrela();
-
     }
-
-    private boolean isEqualFinal(Estado m) {
-        return false;
-    }
-
 }
