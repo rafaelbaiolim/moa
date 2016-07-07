@@ -231,6 +231,7 @@ public class MOA {
             cnjtSuss = this.getPossibilidadesPermuta(m);
 
             for (Estado filho : cnjtSuss) {
+                // Buga quando entra no if dentro do for
                 for (Iterator<Entry<int[], Estado>> it = cnjtA.entrySet().iterator(); it.hasNext();) {
                     Entry<int[], Estado> entry = it.next();
                     if (isStateEqual(filho.elementos, entry.getValue().elementos)
