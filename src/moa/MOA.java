@@ -8,7 +8,11 @@ import java.util.Map.Entry;
 public class MOA {
 
     static final String CONFIG_FINAL = "1 12 11 10 2 13 0 9 3 14 15 8 4 5 6 7";
-    static int[] conf_inicial = {11, 12, 13, 14, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    static final int[][] CONFIG_SNAKE = {{0, 4}, {4, 8}, {8, 12}, {12, 13},
+    {13, 14}, {14, 15}, {15, 11}, {11, 7}, {7, 3}, {3, 2}, {2, 1}, {1, 5}, {5, 9},
+    {9, 10}, {10, 6}, {6, 6}};
+
     static int stcMovimentos = 0;
 
     class Estado {
@@ -52,31 +56,25 @@ public class MOA {
         return ret.trim();
     }
 
-    public int[][] criarMatriz(int[] entrada) {
-        int matrizInicial[][] = new int[4][4];
+    public int calcularSegundaHeuristica(int[] config) {
+        int out = 0;
+        int limit = CONFIG_SNAKE.length - 2;
+        for (int i = 0; i < CONFIG_SNAKE.length - 1; i++) {
+            int[] coord = CONFIG_SNAKE[i];
+            int origem = coord[0];
+            int destino = coord[1];
+            if (config[origem] != 0) {
+                if (i == limit && config[destino] == 0) {
+                    continue;
+                }
 
-        int total = 0;
-        for (int i = 0; i < matrizInicial.length; i++) {
-            for (int j = 0; j < matrizInicial[0].length; j++) {
-                matrizInicial[i][j] = entrada[total++];
-            }
-        }
-        return matrizInicial;
-    }
-
-    public int calcularSegundaHeuristicaMatriz(int[] configInicial, int[] configFim) {
-        int[][] matrizInicial = this.criarMatriz(configInicial);
-        int[][] matrizFinal = this.criarMatriz(configFim);
-
-        int pecasFora = 0;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                if (matrizInicial[i][j] != matrizFinal[i][j]) {
-                    pecasFora++;
+                if (config[origem] + 1 != config[destino]) {
+                    out++;
                 }
             }
         }
-        return pecasFora;
+
+        return out;
     }
 
     /**
@@ -95,58 +93,48 @@ public class MOA {
         ArrayList<Integer> lastColRight = new ArrayList<Integer>();
         lastColRight.addAll(Arrays.asList(3, 7, 11, 15));
 
-        //Pega o Elemento a direita
-        posTroca = zeroPosition + 1;
-        if (posTroca % 4 != 0) {
-            Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, arrConfStr), estado, custoAtual);
+        try {
+            //Pega o Elemento a direita
+            posTroca = zeroPosition + 1;
+            if (posTroca % 4 != 0) {
+                Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                        posTroca, arrConfStr), estado, custoAtual);
 
-            lstFilhos.add(est);
-        }
+                lstFilhos.add(est);
+            }
 
-        //Pega o Elemento a esquerda
-        posTroca = zeroPosition - 1;
-        if ((lastColRight.indexOf(posTroca) == -1)) {
-            Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, arrConfStr), estado, custoAtual);
+            //Pega o Elemento a esquerda
+            posTroca = zeroPosition - 1;
+            if ((posTroca >= 0)
+                    && (lastColRight.indexOf(posTroca) == -1)) {
+                Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                        posTroca, arrConfStr), estado, custoAtual);
 
-            lstFilhos.add(est);
-        }
+                lstFilhos.add(est);
+            }
 
-        //Pega o Elemento a cima
-        posTroca = zeroPosition - 4;
-        if (posTroca >= 0) {
-            Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, arrConfStr), estado, custoAtual);
+            //Pega o Elemento a cima
+            posTroca = zeroPosition - 4;
+            if (posTroca >= 0) {
+                Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                        posTroca, arrConfStr), estado, custoAtual);
 
-            lstFilhos.add(est);
+                lstFilhos.add(est);
 
-        }
+            }
 
-        //Pega o Elemento a baixo
-        posTroca = zeroPosition + 4;
-        if (posTroca <= maxPositionMatriz) {
-            Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                    posTroca, arrConfStr), estado, custoAtual);
+            //Pega o Elemento a baixo
+            posTroca = zeroPosition + 4;
+            if (posTroca <= maxPositionMatriz) {
+                Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                        posTroca, arrConfStr), estado, custoAtual);
 
-            lstFilhos.add(est);
+                lstFilhos.add(est);
+            }
+        } catch (Exception ex) {
+            System.out.println("treta");
         }
         return lstFilhos;
-    }
-
-    public int calcularPrimeiraHeuristica(String configuracao_i, String configuracao_f) {
-
-        int out = 0;
-        String[] a = configuracao_i.split(" ");
-        String[] b = configuracao_f.split(" ");
-
-        for (int i = 0; i < b.length - 1; i++) {
-            if (Integer.parseInt(a[i]) != Integer.parseInt(b[i])) {
-                out++;
-            }
-        }
-
-        return out;
     }
 
     public int[] criaVetor(String entrada) {
@@ -175,8 +163,9 @@ public class MOA {
         HashMap<String, Estado> cnjtF = new HashMap<>();  //Fechados
         ArrayList<Estado> cnjtSuss = new ArrayList<>();   //Filhos 
         Estado m = new Estado(configInicial);
-        m.hS = calcularPrimeiraHeuristica(m.elementos, CONFIG_FINAL);
-        int contador = 0;
+        m.hS = calcularSegundaHeuristica(criaVetor(m.elementos));
+
+        int contador = 1;
         while ((m != null) && (!m.elementos.equals(CONFIG_FINAL))) {
 
             cnjtF.put(m.elementos, m);
@@ -191,9 +180,12 @@ public class MOA {
                 if (cnjAEst != null && filho.custo < cnjAEst.custo) {
                     cnjtA.remove(filho.elementos);
                 }
+                cnjAEst = cnjtA.get(filho.elementos);
+                cnjFEst = cnjtF.get(filho.elementos);
 
                 if (cnjAEst == null && cnjFEst == null) {
-                    filho.hS = calcularPrimeiraHeuristica(filho.elementos, CONFIG_FINAL);
+                    filho.hS = calcularSegundaHeuristica(criaVetor(filho.elementos));
+
                     //System.out.println(filho.custo);
                     filho.fn = filho.custo + filho.hS;
                     cnjtA.put(filho.elementos, filho);
@@ -201,7 +193,6 @@ public class MOA {
             }
             m = getMinValue(cnjtA);
             System.out.println("Jogada " + contador++ + " : " + m.elementos);
-
         }
     }
 
@@ -214,6 +205,6 @@ public class MOA {
         String caso15Mov = "2 1 12 11 3 0 15 10 4 13 6 9 5 14 7 8";
         String caso20Mov = "2 1 12 11 3 15 6 10 4 0 7 9 5 13 14 8";
 
-        moa.algoritmoAEstrela(caso7Mov);
+        moa.algoritmoAEstrela(caso6Mov);
     }
 }
