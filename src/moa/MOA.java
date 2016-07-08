@@ -56,6 +56,18 @@ public class MOA {
         return ret.trim();
     }
 
+    public int calcularPrimeiraHeuristica(String config) {
+        int out = 0;
+        String[] a = config.split(" ");
+        String[] b = CONFIG_FINAL.split(" ");
+        for (int i = 0; i < b.length - 1; i++) {
+            if (Integer.parseInt(a[i]) != Integer.parseInt(b[i])) {
+                out++;
+            }
+        }
+        return out;
+    }
+
     public int calcularSegundaHeuristica(int[] config) {
         int out = 0;
         int limit = CONFIG_SNAKE.length - 2;
@@ -77,6 +89,10 @@ public class MOA {
         return out;
     }
 
+    public int calcularTerceiraHeuristica(int[] config) {
+        return 0;
+    }
+
     /**
      * Suponha Arry as Matrix[4][4]
      *
@@ -93,47 +109,44 @@ public class MOA {
         ArrayList<Integer> lastColRight = new ArrayList<Integer>();
         lastColRight.addAll(Arrays.asList(3, 7, 11, 15));
 
-        try {
-            //Pega o Elemento a direita
-            posTroca = zeroPosition + 1;
-            if (posTroca % 4 != 0) {
-                Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                        posTroca, arrConfStr), estado, custoAtual);
+        //Pega o Elemento a direita
+        posTroca = zeroPosition + 1;
+        if (posTroca % 4 != 0) {
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, arrConfStr), estado, custoAtual);
 
-                lstFilhos.add(est);
-            }
-
-            //Pega o Elemento a esquerda
-            posTroca = zeroPosition - 1;
-            if ((posTroca >= 0)
-                    && (lastColRight.indexOf(posTroca) == -1)) {
-                Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                        posTroca, arrConfStr), estado, custoAtual);
-
-                lstFilhos.add(est);
-            }
-
-            //Pega o Elemento a cima
-            posTroca = zeroPosition - 4;
-            if (posTroca >= 0) {
-                Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                        posTroca, arrConfStr), estado, custoAtual);
-
-                lstFilhos.add(est);
-
-            }
-
-            //Pega o Elemento a baixo
-            posTroca = zeroPosition + 4;
-            if (posTroca <= maxPositionMatriz) {
-                Estado est = new Estado(getArrayPosTroca(zeroPosition,
-                        posTroca, arrConfStr), estado, custoAtual);
-
-                lstFilhos.add(est);
-            }
-        } catch (Exception ex) {
-            System.out.println("treta");
+            lstFilhos.add(est);
         }
+
+        //Pega o Elemento a esquerda
+        posTroca = zeroPosition - 1;
+        if ((posTroca >= 0)
+                && (lastColRight.indexOf(posTroca) == -1)) {
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, arrConfStr), estado, custoAtual);
+
+            lstFilhos.add(est);
+        }
+
+        //Pega o Elemento a cima
+        posTroca = zeroPosition - 4;
+        if (posTroca >= 0) {
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, arrConfStr), estado, custoAtual);
+
+            lstFilhos.add(est);
+
+        }
+
+        //Pega o Elemento a baixo
+        posTroca = zeroPosition + 4;
+        if (posTroca <= maxPositionMatriz) {
+            Estado est = new Estado(getArrayPosTroca(zeroPosition,
+                    posTroca, arrConfStr), estado, custoAtual);
+
+            lstFilhos.add(est);
+        }
+
         return lstFilhos;
     }
 
@@ -149,9 +162,11 @@ public class MOA {
 
     // pega o estado de menor fn
     public Estado getMinValue(HashMap<String, Estado> array) {
-        Entry<String, Estado> min = null;
+        Entry<String, Estado> cy = array.entrySet().iterator().next();
+
+        Entry<String, Estado> min = cy;
         for (Entry<String, Estado> entry : array.entrySet()) {
-            if (min == null || min.getValue().fn > entry.getValue().fn) {
+            if (min == null || min.getValue().fn >= entry.getValue().fn) {
                 min = entry;
             }
         }
@@ -163,6 +178,7 @@ public class MOA {
         HashMap<String, Estado> cnjtF = new HashMap<>();  //Fechados
         ArrayList<Estado> cnjtSuss = new ArrayList<>();   //Filhos 
         Estado m = new Estado(configInicial);
+        //m.hS = calcularPrimeiraHeuristica(m.elementos);
         m.hS = calcularSegundaHeuristica(criaVetor(m.elementos));
 
         int contador = 1;
@@ -184,6 +200,7 @@ public class MOA {
                 cnjFEst = cnjtF.get(filho.elementos);
 
                 if (cnjAEst == null && cnjFEst == null) {
+                    // filho.hS = calcularPrimeiraHeuristica(filho.elementos);
                     filho.hS = calcularSegundaHeuristica(criaVetor(filho.elementos));
 
                     //System.out.println(filho.custo);
@@ -192,8 +209,9 @@ public class MOA {
                 }
             }
             m = getMinValue(cnjtA);
-            System.out.println("Jogada " + contador++ + " : " + m.elementos);
+            //System.out.println("Jogada  : " + m.elementos);
         }
+        System.out.println("TOTAL  : " + m.custo);
     }
 
     public static void main(String[] args) {
