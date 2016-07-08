@@ -26,9 +26,9 @@ public class Utils {
         return matrizInicial;
     }
 
-    public static void printArrayList(ArrayList<int[]> lst) {
-        for (int[] vet : lst) {
-            System.out.println(Arrays.toString(vet));
+    public static void printArrayList(ArrayList<MOA.Estado> lst) {
+        for (MOA.Estado vet : lst) {
+            System.out.println(vet.elementos);
         }
     }
 
