@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 
 public class MOA {
 
@@ -17,7 +18,7 @@ public class MOA {
 
     static int stcMovimentos = 0;
 
-    class Estado {
+    class Estado implements Comparable<Estado> {
 
         public int custo = 0;
         public String elementos;
@@ -38,6 +39,21 @@ public class MOA {
         Estado(String elementos) {
             this.elementos = elementos;
             this.elAsVet = elementos.split(" ");
+        }
+
+        @Override
+        public int compareTo(Estado o) {
+            /* 
+             a fila de prioridade ordena em relação 
+             ao menor valor de F(n) = g(n) + h'(n) 
+             */
+            if (this.fn < o.fn) {
+                return -1;
+            }
+            if (this.fn > o.fn) {
+                return 1;
+            }
+            return 0;
         }
 
     }
@@ -198,8 +214,9 @@ public class MOA {
         HashMap<String, Estado> cnjtF = new HashMap<>();
         ArrayList<Estado> cnjtSuss = new ArrayList<>();
         Estado m = new Estado(configInicial);
+        PriorityQueue<Estado> Q = new PriorityQueue<Estado>();
 
-        m.hS = calcularPrimeiraHeuristica(m.elementos);
+        m.hS = calcularQuintaHeuristica(m);
         m.fn = m.hS + 0;
 
         while ((m != null) && (!m.elementos.equals(CONFIG_FINAL))) {
@@ -215,15 +232,22 @@ public class MOA {
 
                 if (cnjAEst != null && filho.custo < cnjAEst.custo) {
                     cnjtA.remove(filho.elementos);
+                    if (Q.contains(filho)) {
+                        Q.remove(filho);
+                    }
                 }
 
                 if (cnjAEst == null && cnjFEst == null) {
-                    filho.hS = calcularPrimeiraHeuristica(filho.elementos);
+                    filho.hS = calcularQuintaHeuristica(filho);
                     filho.fn = filho.custo + filho.hS;
                     cnjtA.put(filho.elementos, filho);
+                    Q.add(filho);
+
                 }
             }
-            m = getMinValue(cnjtA);
+
+            m = Q.remove();
+            //m = getMinValue(cnjtA);
         }
         System.out.println(m.custo);
     }
@@ -238,11 +262,11 @@ public class MOA {
         String caso20Mov = "2 1 12 11 3 15 6 10 4 0 7 9 5 13 14 8";
         String casoIndefinido = "11 15 4 5 0 14 2 10 3 6 1 9 13 12 8 7";
 
-        String casoMoodle5 = "2 0 14 10 13 15 12 1 3 5 9 8 4 6 11 7";
+        String casoMoodle = "1 14 11 10 2 6 12 8 3 0 15 9 5 4 7 13";
 
-        //for (int i = 0; i < 16; i++) {
-        //  CONFIG_HASH.put(CONFIG_FINAL_STR[i], i);
-        //}
-        moa.algoritmoAEstrela(caso15Mov);
+        for (int i = 0; i < 16; i++) {
+            CONFIG_HASH.put(CONFIG_FINAL_STR[i], i);
+        }
+        moa.algoritmoAEstrela(casoMoodle);
     }
 }
