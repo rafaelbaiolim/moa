@@ -133,6 +133,14 @@ public class MOA {
         return Math.max(Math.max(h1, h2), h3);
     }
 
+    public int calcularQuartaHeuristica(Estado config) {
+        Double r1 = 0.1 * calcularPrimeiraHeuristica(config.elementos);
+        Double r2 = 0.1 * calcularSegundaHeuristica(criaVetor(config.elementos));
+        Double r3 = 0.8 * calcularTerceiraHeuristica(config);
+        Double result = (r1 + r2 + r3);
+        return result.intValue();
+    }
+
     /**
      * Suponha Arry as Matrix[4][4]
      *
@@ -262,7 +270,7 @@ public class MOA {
         String caso20Mov = "2 1 12 11 3 15 6 10 4 0 7 9 5 13 14 8";
         String casoIndefinido = "11 15 4 5 0 14 2 10 3 6 1 9 13 12 8 7";
 
-        String casoMoodle = "1 14 11 10 2 6 12 8 3 0 15 9 5 4 7 13";
+        String casoMoodle = "0 2 15 11 4 12 3 10 1 9 6 8 5 7 13 14";
 
         for (int i = 0; i < 16; i++) {
             CONFIG_HASH.put(CONFIG_FINAL_STR[i], i);
