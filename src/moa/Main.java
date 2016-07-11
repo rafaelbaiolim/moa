@@ -3,13 +3,14 @@ package moa;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.PriorityQueue;
+import java.util.Scanner;
 
-public class MOA {
+class Moa {
 
     static final String CONFIG_FINAL = "1 12 11 10 2 13 0 9 3 14 15 8 4 5 6 7";
     static final String[] CONFIG_FINAL_STR = {"1", "12", "11", "10", "2", "13", "0", "9", "3", "14", "15", "8", "4", "5", "6", "7"};
+    static final int[] CONFIG_FINAL_INT = {1, 12, 11, 10, 2, 13, 0, 9, 3, 14, 15, 8, 4, 5, 6, 7};
     static final HashMap<String, Integer> CONFIG_HASH = new HashMap<>();
 
     static final int[][] CONFIG_SNAKE = {{0, 4}, {4, 8}, {8, 12}, {12, 13},
@@ -22,7 +23,7 @@ public class MOA {
 
         public int custo = 0;
         public String elementos;
-        public String[] elAsVet;
+        public String[] asVet;
 
         public int hS;
         public int fn;
@@ -31,22 +32,18 @@ public class MOA {
         Estado(String elementos, Estado pai, int custo) {
             this.custo = custo;
             this.elementos = elementos;
-            this.elAsVet = elementos.split(" ");
+            this.asVet = elementos.split(" ");
             this.pai = pai;
 
         }
 
         Estado(String elementos) {
             this.elementos = elementos;
-            this.elAsVet = elementos.split(" ");
+            this.asVet = elementos.split(" ");
         }
 
         @Override
         public int compareTo(Estado o) {
-            /* 
-             a fila de prioridade ordena em relação 
-             ao menor valor de F(n) = g(n) + h'(n) 
-             */
             if (this.fn < o.fn) {
                 return -1;
             }
@@ -58,7 +55,7 @@ public class MOA {
 
     }
 
-    public int getZeroPosition(String[] arrStr) {
+    protected int getZeroPosition(String[] arrStr) {
         int i = 0;
         for (i = 0; i < arrStr.length; i++) {
             if (Integer.parseInt(arrStr[i]) == 0) {
@@ -68,7 +65,7 @@ public class MOA {
         return - 1;
     }
 
-    public String getArrayPosTroca(int zeroPos, int posTroca, String[] config) {
+    protected String getArrayPosTroca(int zeroPos, int posTroca, String[] config) {
         String[] newConfig = config.clone();
         String aux = newConfig[posTroca];
         newConfig[posTroca] = newConfig[zeroPos];
@@ -80,30 +77,29 @@ public class MOA {
         return ret.trim();
     }
 
-    public int calcularPrimeiraHeuristica(String config) {
+    protected int calcularH1(String[] config) {
         int out = 0;
-        String[] a = config.split(" ");
-        String[] b = CONFIG_FINAL.split(" ");
-        for (int i = 0; i < b.length - 1; i++) {
-            if (!a[i].equals(b[i])) {
+        for (int i = 0; i < CONFIG_FINAL_STR.length - 1; i++) {
+            if (Integer.parseInt(config[i]) != CONFIG_FINAL_INT[i]) {
                 out++;
             }
         }
         return out;
     }
 
-    public int calcularSegundaHeuristica(int[] config) {
+    protected int calcularH2(String[] config) {
         int out = 0;
         int limit = CONFIG_SNAKE.length - 2;
         for (int i = 0; i < CONFIG_SNAKE.length - 1; i++) {
             int[] coord = CONFIG_SNAKE[i];
 
-            if (config[coord[0]] != 0) {
-                if (i == limit && config[coord[1]] == 0) {
+            if (Integer.parseInt(config[coord[0]]) != 0) {
+                if (i == limit && Integer.parseInt(config[coord[1]]) == 0) {
                     continue;
                 }
 
-                if (config[coord[0]] + 1 != config[coord[1]]) {
+                if ((Integer.parseInt(config[coord[0]]) + 1)
+                        != Integer.parseInt(config[coord[1]])) {
                     out++;
                 }
             }
@@ -111,12 +107,11 @@ public class MOA {
         return out;
     }
 
-    public int calcularTerceiraHeuristica(Estado config) {
+    protected int calcularH3(String[] config) {
         int distanciaR = 0;
-        String[] strArr = config.elAsVet;
         for (int i = 0; i < 16; i++) {
-            String currentElment = strArr[i];
-            if (!CONFIG_FINAL_STR[i].equals(currentElment)) {
+            String currentElment = config[i];
+            if (CONFIG_FINAL_INT[i] != Integer.parseInt(currentElment)) {
                 int posInicial = CONFIG_HASH.get(currentElment);
                 distanciaR += Math.abs((posInicial % 4) - (i % 4)) + Math.abs((posInicial / 4) - (i / 4));
             }
@@ -124,33 +119,28 @@ public class MOA {
         return distanciaR;
     }
 
-    public int calcularQuintaHeuristica(Estado config) {
-        int h1, h2, h3;
-        h1 = calcularPrimeiraHeuristica(config.elementos);
-        h2 = calcularSegundaHeuristica(criaVetor(config.elementos));
-        h3 = calcularTerceiraHeuristica(config);
-
-        return Math.max(Math.max(h1, h2), h3);
-    }
-
-    public int calcularQuartaHeuristica(Estado config) {
-        Double r1 = 0.1 * calcularPrimeiraHeuristica(config.elementos);
-        Double r2 = 0.1 * calcularSegundaHeuristica(criaVetor(config.elementos));
-        Double r3 = 0.8 * calcularTerceiraHeuristica(config);
+    protected int calcularH4(Estado config) {
+        Double r1 = 0.1 * calcularH1(config.asVet);
+        Double r2 = 0.1 * calcularH2(config.asVet);
+        Double r3 = 0.8 * calcularH3(config.asVet);
         Double result = (r1 + r2 + r3);
         return result.intValue();
     }
 
-    /**
-     * Suponha Arry as Matrix[4][4]
-     *
-     * @param confInicial
-     */
-    private ArrayList<Estado> getPossibilidadesPermuta(Estado estado) {
+    protected int calcularH5(Estado config) {
+        int h1, h2, h3;
+        h1 = calcularH1(config.asVet);
+        h2 = calcularH2(config.asVet);
+        h3 = calcularH3(config.asVet);
+
+        return Math.max(Math.max(h1, h2), h3);
+    }
+
+    protected ArrayList<Estado> getPossibilidadesPermuta(Estado estado) {
         int posTroca;
-        String[] arrConfStr = estado.elementos.split(" ");
+        String[] arrConfStr = estado.asVet;
         int zeroPosition = this.getZeroPosition(arrConfStr);
-        int maxPositionMatriz = arrConfStr.length - 1;
+        int maxPositionMatriz = 15;
         int custoAtual = estado.custo + 1;
 
         ArrayList<Estado> lstFilhos = new ArrayList<Estado>();
@@ -195,7 +185,7 @@ public class MOA {
         return lstFilhos;
     }
 
-    public int[] criaVetor(String entrada) {
+    protected int[] criaVetor(String entrada) {
         String[] entrada2 = entrada.split(" ");
         int[] valorInt = new int[entrada2.length];
 
@@ -205,26 +195,14 @@ public class MOA {
         return valorInt;
     }
 
-    // pega o estado de menor fn
-    public Estado getMinValue(HashMap<String, Estado> array) {
-        Entry<String, Estado> cy = array.entrySet().iterator().next();
-        Entry<String, Estado> min = cy;
-        for (Entry<String, Estado> entry : array.entrySet()) {
-            if (min == null || min.getValue().fn >= entry.getValue().fn) {
-                min = entry;
-            }
-        }
-        return min.getValue();
-    }
-
-    private void algoritmoAEstrela(String configInicial) {
+    protected void algoritmoAEstrela(String configInicial) {
         HashMap<String, Estado> cnjtA = new HashMap<>();
         HashMap<String, Estado> cnjtF = new HashMap<>();
         ArrayList<Estado> cnjtSuss = new ArrayList<>();
         Estado m = new Estado(configInicial);
-        PriorityQueue<Estado> Q = new PriorityQueue<Estado>();
+        PriorityQueue<Estado> Q = new PriorityQueue<>();
 
-        m.hS = calcularQuintaHeuristica(m);
+        m.hS = calcularH5(m);
         m.fn = m.hS + 0;
 
         while ((m != null) && (!m.elementos.equals(CONFIG_FINAL))) {
@@ -236,7 +214,7 @@ public class MOA {
 
             for (Estado filho : cnjtSuss) {
                 Estado cnjAEst = cnjtA.get(filho.elementos);
-                Estado cnjFEst = cnjtF.get(filho.elementos);
+                boolean cnjFEst = cnjtF.containsKey(filho.elementos);
 
                 if (cnjAEst != null && filho.custo < cnjAEst.custo) {
                     cnjtA.remove(filho.elementos);
@@ -245,23 +223,19 @@ public class MOA {
                     }
                 }
 
-                if (cnjAEst == null && cnjFEst == null) {
-                    filho.hS = calcularQuintaHeuristica(filho);
+                if (cnjAEst == null && cnjFEst == false) {
+                    filho.hS = calcularH5(m);
                     filho.fn = filho.custo + filho.hS;
                     cnjtA.put(filho.elementos, filho);
                     Q.add(filho);
-
                 }
             }
-
             m = Q.remove();
-            //m = getMinValue(cnjtA);
         }
         System.out.println(m.custo);
     }
 
     public static void main(String[] args) {
-        MOA moa = new MOA();
 
         String caso6Mov = "1 12 11 10 0 13 15 9 2 14 6 8 3 4 5 7";
         String caso7Mov = "1 12 0 11 2 13 15 10 3 14 6 9 4 5 7 8";
@@ -275,6 +249,12 @@ public class MOA {
         for (int i = 0; i < 16; i++) {
             CONFIG_HASH.put(CONFIG_FINAL_STR[i], i);
         }
-        moa.algoritmoAEstrela(casoMoodle);
+
+        //       String input = "";
+        //       try (Scanner sc = new Scanner(System.in)) {
+        //           input = sc.nextLine();
+        //       }
+        Moa main = new Moa();
+        main.algoritmoAEstrela("4 2 15 11 1 12 3 10 9 7 6 8 5 0 13 14");
     }
 }
