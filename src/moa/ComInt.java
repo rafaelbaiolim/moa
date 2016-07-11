@@ -6,12 +6,8 @@ import java.util.PriorityQueue;
 import java.util.Scanner;
 
 class Main {
-    
+
     static final int[] CONFIG_FINAL = {1, 12, 11, 10, 2, 13, 0, 9, 3, 14, 15, 8, 4, 5, 6, 7};
-    static final HashMap<Integer, Integer> CONFIG_HASH = new HashMap<>();
-    static final int[][] CONFIG_SNAKE = {{0, 4}, {4, 8}, {8, 12}, {12, 13},
-    {13, 14}, {14, 15}, {15, 11}, {11, 7}, {7, 3}, {3, 2}, {2, 1}, {1, 5}, {5, 9},
-    {9, 10}, {10, 6}, {6, 6}};
 
     class Estado implements Comparable<Estado> {
 
@@ -49,68 +45,133 @@ class Main {
 
     }
 
+    public abstract class Metodo {
+
+        abstract int calcular(int[] config);
+    }
+
+    class Heuristica1 extends Metodo {
+
+        @Override
+        int calcular(int[] config) {
+            int out = 0;
+            for (int i = 0; i < config.length - 1; i++) {
+                if (config[i] != CONFIG_FINAL[i]) {
+                    out++;
+                }
+            }
+            return out;
+        }
+
+    }
+
+    class Heuristica2 extends Metodo {
+
+        int[][] CONFIG_SNAKE = {{0, 4}, {4, 8}, {8, 12}, {12, 13},
+        {13, 14}, {14, 15}, {15, 11}, {11, 7}, {7, 3}, {3, 2}, {2, 1}, {1, 5}, {5, 9},
+        {9, 10}, {10, 6}, {6, 6}};
+
+        @Override
+        int calcular(int[] config) {
+            int out = 0;
+            int limit = CONFIG_SNAKE.length - 2;
+            for (int i = 0; i < CONFIG_SNAKE.length - 1; i++) {
+                int[] coord = CONFIG_SNAKE[i];
+
+                if (config[coord[0]] != 0) {
+                    if (i == limit && config[coord[1]] == 0) {
+                        continue;
+                    }
+
+                    if (config[coord[0]] + 1 != config[coord[1]]) {
+                        out++;
+                    }
+                }
+            }
+            return out;
+        }
+
+    }
+
+    class Heuristica3 extends Metodo {
+
+        HashMap<Integer, Integer> CONFIG_HASH = new HashMap<>();
+
+        public Heuristica3() {
+            if (CONFIG_HASH.isEmpty()) {
+                for (int i = 0; i < 16; i++) {
+                    CONFIG_HASH.put(CONFIG_FINAL[i], i);
+                }
+            }
+        }
+
+        @Override
+        int calcular(int[] config) {
+            int distanciaR = 0;
+            for (int i = 0; i < 16; i++) {
+                int currentElment = config[i];
+                if (CONFIG_FINAL[i] != currentElment) {
+                    int posInicial = CONFIG_HASH.get(currentElment);
+                    distanciaR += Math.abs((posInicial % 4) - (i % 4)) + Math.abs((posInicial / 4) - (i / 4));
+                }
+            }
+            return distanciaR;
+        }
+
+    }
+
+    class Heuristica4 extends Metodo {
+
+        @Override
+        int calcular(int[] config) {
+            Double r1 = 0.1 * new Heuristica1().calcular(config);
+            Double r2 = 0.2 * new Heuristica2().calcular(config);
+            Double r3 = 0.7 * new Heuristica3().calcular(config);
+            Double result = (r1 + r2 + r3);
+            return result.intValue();
+        }
+
+    }
+
+    class Heuristica5 extends Metodo {
+
+        @Override
+        int calcular(int[] config) {
+            int h1, h2, h3;
+            h1 = new Heuristica1().calcular(config);
+            h2 = new Heuristica2().calcular(config);
+            h3 = new Heuristica3().calcular(config);
+
+            return Math.max(Math.max(h1, h2), h3);
+        }
+
+    }
+
+    class FactoryHeuristica {
+
+        Metodo getH(int whichH) {
+            switch (whichH) {
+                case 1:
+                    return new Heuristica1();
+                case 2:
+                    return new Heuristica2();
+                case 3:
+                    return new Heuristica3();
+                case 4:
+                    return new Heuristica4();
+                case 5:
+                    return new Heuristica5();
+                default:
+                    return new Heuristica5();
+            }
+        }
+
+    }
+
     protected int[] criarVetor(String entrada) {
         String[] config = entrada.split(" ");
         int[] array = Arrays.asList(config).stream().mapToInt(Integer::parseInt).toArray();
         return array;
-    }
-
-    protected int calcularH1(int[] config) {
-        int out = 0;
-        for (int i = 0; i < config.length - 1; i++) {
-            if (config[i] != CONFIG_FINAL[i]) {
-                out++;
-            }
-        }
-        return out;
-    }
-
-    protected int calcularH2(int[] config) {
-        int out = 0;
-        int limit = CONFIG_SNAKE.length - 2;
-        for (int i = 0; i < CONFIG_SNAKE.length - 1; i++) {
-            int[] coord = CONFIG_SNAKE[i];
-
-            if (config[coord[0]] != 0) {
-                if (i == limit && config[coord[1]] == 0) {
-                    continue;
-                }
-
-                if (config[coord[0]] + 1 != config[coord[1]]) {
-                    out++;
-                }
-            }
-        }
-        return out;
-    }
-
-    protected int calcularH3(int[] config) {
-        int distanciaR = 0;
-        for (int i = 0; i < 16; i++) {
-            int currentElment = config[i];
-            if (CONFIG_FINAL[i] != currentElment) {
-                int posInicial = CONFIG_HASH.get(currentElment);
-                distanciaR += Math.abs((posInicial % 4) - (i % 4)) + Math.abs((posInicial / 4) - (i / 4));
-            }
-        }
-        return distanciaR;
-    }
-
-    protected int calcularH4(int[] config) {
-        Double r1 = 0.4 * calcularH1(config);
-        Double r2 = 0.3 * calcularH2(config);
-        Double r3 = 0.1 * calcularH3(config);
-        Double result = (r1 + r2 + r3);
-        return result.intValue();
-    }
-
-    protected int calcularH5(int[] config) {
-        int h1, h2, h3;
-        h1 = calcularH1(config);
-        h2 = calcularH2(config);
-        h3 = calcularH3(config);
-
-        return Math.max(Math.max(h1, h2), h3);
     }
 
     protected int[] getArrayPosTrocada(int zeroPos, int posTroca, int[] config) {
@@ -183,21 +244,23 @@ class Main {
         return lstFilhos;
     }
 
-    protected void algoritmoAEstrela(String configInicial) {
+    protected void algoritmoAEstrela(String configInicial, int wichH) {
         HashMap<String, Estado> cnjtA = new HashMap<>();
         HashMap<String, Estado> cnjtF = new HashMap<>();
         ArrayList<Estado> cnjtSuss = new ArrayList<>();
         PriorityQueue<Estado> Q = new PriorityQueue<>();
 
+        FactoryHeuristica factoryHeuristica = new FactoryHeuristica();
+        Metodo heuristica = factoryHeuristica.getH(wichH);
         int[] asVet = criarVetor(configInicial);
 
         Estado m = new Estado(asVet);
-        m.hS = calcularH5(asVet);
+        m.hS = heuristica.calcular(asVet);
         m.fn = m.hS + 0;
         String key = m.key;
-        String cg = Arrays.toString(CONFIG_FINAL);
+        String cfAsArr = Arrays.toString(CONFIG_FINAL);
 
-        while ((m != null) && (!m.key.equals(cg))) {
+        while ((m != null) && (!m.key.equals(cfAsArr))) {
             cnjtF.put(key, m);
             cnjtA.remove(key);
 
@@ -216,34 +279,28 @@ class Main {
                 }
 
                 if (cnjAEst == null && cnjFEst == null) {
-                    filho.hS = calcularH5(filho.elementos);
+                    filho.hS = heuristica.calcular(filho.elementos);
                     filho.fn = filho.custo + filho.hS;
                     cnjtA.put(key, filho);
                     Q.add(filho);
 
                 }
             }
-
             m = Q.remove();
-
-            //m = getMinValue(cnjtA);
         }
-        System.out.println(m.custo);
+        //System.out.println(m.custo);
     }
 
     public static void main(String[] args) {
         Main main = new Main();
-        for (int i = 0; i < 16; i++) {
-            CONFIG_HASH.put(CONFIG_FINAL[i], i);
-        }
 
         String input = "4 2 15 11 1 12 3 10 9 7 6 8 5 0 13 14";
+        //String input = "";
         //try (Scanner sc = new Scanner(System.in)) {
-        //  input = sc.nextLine();
+        //     input = sc.nextLine();
         //}
-
-        //main.algoritmoAEstrela(input.trim().replaceAll(" +", " "));
-        main.algoritmoAEstrela(input);
+        input = input.trim().replaceAll(" +", " ");
+        main.algoritmoAEstrela(input, 5);
 
     }
 }
