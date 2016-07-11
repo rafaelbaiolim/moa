@@ -248,7 +248,7 @@ class Main {
         HashMap<String, Estado> cnjtA = new HashMap<>();
         HashMap<String, Estado> cnjtF = new HashMap<>();
         ArrayList<Estado> cnjtSuss = new ArrayList<>();
-        PriorityQueue<Estado> Q = new PriorityQueue<>();
+        PriorityQueue<Estado> prtQ = new PriorityQueue<>();
 
         FactoryHeuristica factoryHeuristica = new FactoryHeuristica();
         Metodo heuristica = factoryHeuristica.getH(wichH);
@@ -269,24 +269,24 @@ class Main {
             for (Estado filho : cnjtSuss) {
                 key = filho.key;
                 Estado cnjAEst = cnjtA.get(key);
-                Estado cnjFEst = cnjtF.get(key);
+                boolean cnjFEst = cnjtF.containsKey(key);
 
                 if (cnjAEst != null && filho.custo < cnjAEst.custo) {
                     cnjtA.remove(key);
-                    if (Q.contains(filho)) {
-                        Q.remove(filho);
+                    if (prtQ.contains(filho)) {
+                        prtQ.remove(filho);
                     }
                 }
 
-                if (cnjAEst == null && cnjFEst == null) {
+                if (cnjAEst == null && cnjFEst == false) {
                     filho.hS = heuristica.calcular(filho.elementos);
                     filho.fn = filho.custo + filho.hS;
                     cnjtA.put(key, filho);
-                    Q.add(filho);
+                    prtQ.add(filho);
 
                 }
             }
-            m = Q.remove();
+            m = prtQ.remove();
         }
         //System.out.println(m.custo);
     }
@@ -294,13 +294,14 @@ class Main {
     public static void main(String[] args) {
         Main main = new Main();
 
-        String input = "4 2 15 11 1 12 3 10 9 7 6 8 5 0 13 14";
-        //String input = "";
-        //try (Scanner sc = new Scanner(System.in)) {
-        //     input = sc.nextLine();
-        //}
+        //String input = "4 2 15 11 1 12 3 10 9 7 6 8 5 0 13 14";
+        String input = "";
+        try (Scanner sc = new Scanner(System.in)) {
+            input = sc.nextLine();
+        }
         input = input.trim().replaceAll(" +", " ");
+        
         main.algoritmoAEstrela(input, 5);
-
+        
     }
 }
